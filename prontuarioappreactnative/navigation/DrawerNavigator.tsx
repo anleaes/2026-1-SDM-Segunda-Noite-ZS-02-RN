@@ -7,11 +7,20 @@ import CidScreen, { Cid } from '../screens/CidScreen';
 import CreateCidScreen from '../screens/CreateCidScreen';
 import EditCidScreen from '../screens/EditCidScreen';
 
+import PacienteScreen, { Paciente } from '../screens/PacienteScreen';
+import CreatePacienteScreen from '../screens/CreatePacienteScreen';
+import EditPacienteScreen from '../screens/EditPacienteScreen';
+
 export type DrawerParamList = {
   Home: undefined;
+
   Cids: undefined;
   CreateCid: undefined;
   EditCid: { cid: Cid };
+
+  Pacientes: undefined;
+  CreatePaciente: undefined;
+  EditPaciente: { paciente: Paciente };
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -36,32 +45,26 @@ const DrawerNavigator = () => {
         headerTintColor: '#fff',
       }}
     >
+      {/* HOME */}
       <Drawer.Screen
         name="Home"
         component={HomeScreen}
         options={{
           title: 'Início',
           drawerIcon: ({ color, size }) => (
-            <Ionicons
-              name="home-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
 
+      {/* CID */}
       <Drawer.Screen
         name="Cids"
         component={CidScreen}
         options={{
           title: 'CID',
           drawerIcon: ({ color, size }) => (
-            <Ionicons
-              name="medical-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="medical-outline" size={size} color={color} />
           ),
         }}
       />
@@ -71,9 +74,7 @@ const DrawerNavigator = () => {
         component={CreateCidScreen}
         options={{
           title: 'Novo CID',
-          drawerItemStyle: {
-            display: 'none',
-          },
+          drawerItemStyle: { display: 'none' },
         }}
       />
 
@@ -82,9 +83,37 @@ const DrawerNavigator = () => {
         component={EditCidScreen}
         options={{
           title: 'Editar CID',
-          drawerItemStyle: {
-            display: 'none',
-          },
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+
+      {/* PACIENTES */}
+      <Drawer.Screen
+        name="Pacientes"
+        component={PacienteScreen}
+        options={{
+          title: 'Pacientes',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="CreatePaciente"
+        component={CreatePacienteScreen}
+        options={{
+          title: 'Novo Paciente',
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+
+      <Drawer.Screen
+        name="EditPaciente"
+        component={EditPacienteScreen}
+        options={{
+          title: 'Editar Paciente',
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </Drawer.Navigator>
