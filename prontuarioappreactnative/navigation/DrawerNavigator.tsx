@@ -14,6 +14,7 @@ import EditCidScreen from "../screens/EditCidScreen";
 import EditPacienteScreen from "../screens/EditPacienteScreen";
 import HomeScreen from "../screens/HomeScreen";
 import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
+import ExameSolicitadoScreen, { ExameSolicitado } from "../screens/ExameSolicitadoScreen";
 
 // IMPORTS DA TUA PARTE (ARGEL)
 import ConsultasScreen from "../screens/ConsultasScreen";
@@ -78,6 +79,10 @@ export type DrawerParamList = {
   Receitas: undefined;
   CreateReceita: undefined;
   EditReceita: { receita: Receita };
+  
+  ExamesSolicitados: undefined;
+  CreateExameSolicitado: undefined;
+  EditExameSolicitado: { exame: ExameSolicitado; };
 };
 
 // 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
@@ -90,6 +95,8 @@ const CustomDrawerContent = (props: any) => {
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
+
+
 
 const DrawerNavigator = () => {
   return (
@@ -270,6 +277,39 @@ const DrawerNavigator = () => {
         component={EditReceitaScreen}
         options={{
           title: "Editar Receita",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      
+      <Drawer.Screen
+        name="ExamesSolicitados"
+        component={ExameSolicitadoScreen}
+        options={{
+          title: "Exames Solicitados",
+          drawerIcon: ({ color, size }) => (
+            <Ionicons
+              name="clipboard-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="CreateExameSolicitado"
+        component={CreateExameSolicitadoScreen}
+        options={{
+          title: "Novo Exame",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+
+      <Drawer.Screen
+        name="EditExameSolicitado"
+        component={EditExameSolicitadoScreen}
+        options={{
+          title: "Editar Exame",
           drawerItemStyle: { display: "none" },
         }}
       />
