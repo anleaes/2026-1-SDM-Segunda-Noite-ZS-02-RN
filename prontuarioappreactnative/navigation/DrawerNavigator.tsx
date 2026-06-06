@@ -2,14 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import React from 'react';
 
-import HomeScreen from '../screens/HomeScreen';
 import CidScreen, { Cid } from '../screens/CidScreen';
 import CreateCidScreen from '../screens/CreateCidScreen';
 import EditCidScreen from '../screens/EditCidScreen';
+import HomeScreen from '../screens/HomeScreen';
 
-import PacienteScreen, { Paciente } from '../screens/PacienteScreen';
+import CustomDrawerContent from '../components/CustomDrawerContent';
 import CreatePacienteScreen from '../screens/CreatePacienteScreen';
 import EditPacienteScreen from '../screens/EditPacienteScreen';
+import PacienteScreen, { Paciente } from '../screens/PacienteScreen';
 
 export type DrawerParamList = {
   Home: undefined;
@@ -29,6 +30,7 @@ const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerActiveTintColor: '#4B7BE5',
         drawerLabelStyle: {
