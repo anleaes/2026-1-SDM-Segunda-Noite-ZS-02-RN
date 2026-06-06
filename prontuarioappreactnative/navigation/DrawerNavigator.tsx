@@ -15,6 +15,7 @@ import EditPacienteScreen from "../screens/EditPacienteScreen";
 import HomeScreen from "../screens/HomeScreen";
 import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
 import ExameSolicitadoScreen, { ExameSolicitado } from "../screens/ExameSolicitadoScreen";
+import CreateExameSolicitadoScreen from "../screens/CreateExameSolicitadoScreen";
 
 // IMPORTS DA TUA PARTE (ARGEL)
 import ConsultasScreen from "../screens/ConsultasScreen";
