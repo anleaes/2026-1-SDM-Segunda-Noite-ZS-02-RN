@@ -32,7 +32,7 @@ const PacienteScreen = ({ navigation }: Props) => {
     setLoading(true);
 
     const response = await fetch(
-      'http://127.0.0.1:8000/pacientes/'
+      'http://127.0.0.1:8000/paciente/api/'
     );
 
     const data = await response.json();
@@ -49,7 +49,7 @@ const PacienteScreen = ({ navigation }: Props) => {
 
   const handleDelete = async (id: number) => {
     await fetch(
-      `http://127.0.0.1:8000/pacientes/${id}/`,
+      `http://127.0.0.1:8000/paciente/api/${id}/`,
       {
         method: 'DELETE',
       }
