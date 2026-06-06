@@ -17,6 +17,9 @@ import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
 import ExameSolicitadoScreen, { ExameSolicitado } from "../screens/ExameSolicitadoScreen";
 import CreateExameSolicitadoScreen from "../screens/CreateExameSolicitadoScreen";
 import EditExameSolicitadoScreen from "../screens/EditExameSolicitadoScreen";
+import ResultadoExameScreen, { ResultadoExame, } from "../screens/ResultadoExameScreen";
+import CreateResultadoExameScreen from "../screens/CreateResultadoExameScreen";
+import EditResultadoExameScreen from "../screens/EditResultadoExameScreen";
 
 // IMPORTS DA TUA PARTE (ARGEL)
 import ConsultasScreen from "../screens/ConsultasScreen";
@@ -85,6 +88,10 @@ export type DrawerParamList = {
   ExamesSolicitados: undefined;
   CreateExameSolicitado: undefined;
   EditExameSolicitado: { exame: ExameSolicitado; };
+
+  ResultadosExame: undefined;
+  CreateResultadoExame: undefined;
+  EditResultadoExame: { resultado: ResultadoExame; };
 };
 
 // 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
@@ -315,6 +322,38 @@ const DrawerNavigator = () => {
           drawerItemStyle: { display: "none" },
         }}
       />
+
+      <Drawer.Screen
+        name="ResultadosExame"
+        component={ResultadoExameScreen}
+        options={{
+          title: "Resultados de Exame",
+          drawerIcon: ({ color, size }) => (
+            <Ionicons
+              name="document-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="CreateResultadoExame"
+        component={CreateResultadoExameScreen}
+        options={{
+          title: "Novo Resultado",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+
+      <Drawer.Screen
+        name="EditResultadoExame"
+        component={EditResultadoExameScreen}
+        options={{
+          title: "Editar Resultado",
+          drawerItemStyle: { display: "none" },
+        }} />
     </Drawer.Navigator>
   );
 };
