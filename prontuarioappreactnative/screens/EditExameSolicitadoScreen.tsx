@@ -1,5 +1,6 @@
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { useFocusEffect } from '@react-navigation/native';
+import { Picker } from '@react-native-picker/picker';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,16 +14,17 @@ import {
 
 import { DrawerParamList } from '../navigation/DrawerNavigator';
 
-import { Picker } from '@react-native-picker/picker';
-
 type Props = DrawerScreenProps<
   DrawerParamList,
-  'CreateExameSolicitado'
+  'EditExameSolicitado'
 >;
 
-const CreateExameSolicitadoScreen = ({
+const EditExameSolicitadoScreen = ({
   navigation,
+  route,
 }: Props) => {
+  const { exame } = route.params;
+
   const [nomeExame, setNomeExame] =
     useState('');
 
@@ -36,51 +38,48 @@ const CreateExameSolicitadoScreen = ({
     useState(false);
 
   const [consulta, setConsulta] =
-  useState<number>();
+    useState<number>();
 
   const [consultas, setConsultas] =
-  useState<any[]>([]);
+    useState<any[]>([]);
 
   const [saving, setSaving] =
     useState(false);
 
- useFocusEffect(
-  useCallback(() => {
-    setNomeExame('');
-    setDescricao('');
-    setPreparo('');
-    setExigeJejum(false);
-
-    fetchConsultas();
-  }, [])
-);
-
   const fetchConsultas = async () => {
-  try {
-    const response = await fetch(
-      'http://127.0.0.1:8000/consulta/api/'
-    );
+    try {
+      const response = await fetch(
+        'http://127.0.0.1:8000/consulta/api/'
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    setConsultas(data);
-
-    if (data.length > 0) {
-      setConsulta(data[0].id);
+      setConsultas(data);
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setNomeExame(exame.nome_exame);
+      setDescricao(exame.descricao);
+      setPreparo(exame.preparo);
+      setExigeJejum(exame.exige_jejum);
+      setConsulta(exame.consulta);
+
+      fetchConsultas();
+    }, [exame])
+  );
 
   const handleSave = async () => {
     try {
       setSaving(true);
 
       await fetch(
-        'http://127.0.0.1:8000/exameSolicitado/api/',
+        `http://127.0.0.1:8000/exameSolicitado/api/${exame.id}/`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type':
               'application/json',
@@ -108,7 +107,7 @@ const CreateExameSolicitadoScreen = ({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        Novo Exame Solicitado
+        Editar Exame Solicitado
       </Text>
 
       <Text style={styles.label}>
@@ -150,23 +149,23 @@ const CreateExameSolicitadoScreen = ({
       />
 
       <Text style={styles.label}>
-  Consulta
-</Text>
+        Consulta
+      </Text>
 
-<Picker
-  selectedValue={consulta}
-  onValueChange={(value) =>
-    setConsulta(value)
-  }
->
-  {consultas.map(item => (
-    <Picker.Item
-      key={item.id}
-      label={`Consulta ${item.id}`}
-      value={item.id}
-    />
-  ))}
-</Picker>
+      <Picker
+        selectedValue={consulta}
+        onValueChange={(value) =>
+          setConsulta(value)
+        }
+      >
+        {consultas.map(item => (
+          <Picker.Item
+            key={item.id}
+            label={`Consulta ${item.id}`}
+            value={item.id}
+          />
+        ))}
+      </Picker>
 
       <Text style={styles.label}>
         Exige Jejum
@@ -227,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateExameSolicitadoScreen;
+export default EditExameSolicitadoScreen;
