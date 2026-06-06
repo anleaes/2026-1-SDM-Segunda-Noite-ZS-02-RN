@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { createDrawerNavigator } from "@react-navigation/drawer";
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+} from "@react-navigation/drawer";
+import React from "react";
 
 // IMPORTS DOS TEUS COLEGAS
 import CidScreen, { Cid } from "../screens/CidScreen";
@@ -73,6 +78,15 @@ export type DrawerParamList = {
   Receitas: undefined;
   CreateReceita: undefined;
   EditReceita: { receita: Receita };
+};
+
+// 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
+const CustomDrawerContent = (props: any) => {
+  return (
+    <DrawerContentScrollView {...props}>
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
