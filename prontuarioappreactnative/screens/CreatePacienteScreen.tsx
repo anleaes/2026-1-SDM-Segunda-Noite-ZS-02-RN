@@ -36,21 +36,24 @@ const CreatePacienteScreen = ({ navigation }: Props) => {
   );
 
   const handleSave = async () => {
+
     setSaving(true);
+
     const res = await fetch(
-        'http://localhost:8000/pacientes/api/', {
+        'http://127.0.0.1:8000/paciente/api/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+
       body: JSON.stringify({ 
-        dataNascimento, 
-        peso, 
-        altura, 
-        endereco, 
-        nome, 
-        sobrenome, 
-        cpf, 
-        telefone, 
-        email,
+        data_nascimento: dataNascimento,
+        peso: peso,
+        altura: altura,
+        endereco: endereco,
+        nome: nome,
+        sobrenome: sobrenome,
+        cpf: cpf,
+        telefone: telefone, 
+        email: email,
      }),
     });
     navigation.navigate('Pacientes');  
@@ -96,6 +99,8 @@ const CreatePacienteScreen = ({ navigation }: Props) => {
         value={dataNascimento}
         onChangeText={setDataNascimento}
         style={styles.input}
+        placeholder="AAAA-MM-DD"
+        placeholderTextColor="#736a6a"
       />
       <Text style={styles.label}>Peso</Text>
       <TextInput
