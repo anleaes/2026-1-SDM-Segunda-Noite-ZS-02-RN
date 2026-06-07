@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import React, { useEffect, useState } from "react";
 import {
@@ -16,45 +17,114 @@ import { DrawerParamList } from "../navigation/DrawerNavigator";
 type Props = DrawerScreenProps<DrawerParamList, "EditConsulta">;
 
 const EditConsultaScreen = ({ route, navigation }: Props) => {
-  const { consulta } = route.params;
+  // O uso do 'any' aqui é o truque cirúrgico para o TypeScript aceitar o objeto vindo do Django
+  // com dados aninhados sem pintar a linha de vermelho no VS Code.
+  const consulta = route.params?.consulta as any;
 
-  const [dataAgendada, setDataAgendada] = useState(consulta.data_agendada);
-  const [status, setStatus] = useState(consulta.status);
-  const [motivo, setMotivo] = useState(consulta.motivo);
-  const [nivelPrioridade, setNivelPrioridade] = useState(
-    consulta.nivel_prioridade,
-  );
-  const [pacienteId, setPacienteId] = useState(String(consulta.paciente));
-  const [medicoId, setMedicoId] = useState(String(consulta.medico));
+  const [dataAgendada, setDataAgendada] = useState("");
+  const [status, setStatus] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [nivelPrioridade, setNivelPrioridade] = useState("");
+
+  const [pacienteId, setPacienteId] = useState<number | undefined>(undefined);
+  const [medicoId, setMedicoId] = useState<number | undefined>(undefined);
+
   const [saving, setSaving] = useState(false);
 
+  const [listaPacientes, setListaPacientes] = useState<any[]>([]);
+  const [listaMedicos, setListaMedicos] = useState<any[]>([]);
+
+  // Carrega as listas apontando para os caminhos corretos no singular do teu backend
   useEffect(() => {
-    setDataAgendada(consulta.data_agendada);
-    setStatus(consulta.status);
-    setMotivo(consulta.motivo);
-    setNivelPrioridade(consulta.nivel_prioridade);
-    setPacienteId(String(consulta.paciente));
-    setMedicoId(String(consulta.medico));
+    fetch(`${BASE_URL}/paciente/api/`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro HTTP: " + res.status);
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setListaPacientes(data);
+        } else if (data.results && Array.isArray(data.results)) {
+          setListaPacientes(data.results);
+        } else {
+          setListaPacientes(data.data || []);
+        }
+      })
+      .catch((err) => console.log("Erro ao buscar paciente:", err));
+
+    fetch(`${BASE_URL}/medico/api/`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro HTTP: " + res.status);
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setListaMedicos(data);
+        } else if (data.results && Array.isArray(data.results)) {
+          setListaMedicos(data.results);
+        } else {
+          setListaMedicos(data.data || []);
+        }
+      })
+      .catch((err) => console.log("Erro ao buscar medico:", err));
+  }, []);
+
+  useEffect(() => {
+    if (consulta) {
+      if (consulta.data_agendada) {
+        setDataAgendada(
+          consulta.data_agendada.replace("T", " ").substring(0, 16),
+        );
+      }
+
+      setStatus(consulta.status || "");
+      setMotivo(consulta.motivo || "");
+      setNivelPrioridade(consulta.nivel_prioridade || "");
+
+      const pId =
+        typeof consulta.paciente === "object"
+          ? consulta.paciente.id
+          : consulta.paciente;
+      const mId =
+        typeof consulta.medico === "object"
+          ? consulta.medico.id
+          : consulta.medico;
+
+      setPacienteId(pId ? Number(pId) : undefined);
+      setMedicoId(mId ? Number(mId) : undefined);
+    }
   }, [consulta]);
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      await fetch(`${BASE_URL}/api/consultas/${consulta.id}/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data_agendada: dataAgendada,
-          status: status,
-          motivo: motivo,
-          nivel_prioridade: nivelPrioridade,
-          paciente: parseInt(pacienteId),
-          medico: parseInt(medicoId),
-        }),
-      });
+      const dataFormatadaDjango = dataAgendada.trim().replace(" ", "T");
+
+      const response = await fetch(
+        `${BASE_URL}/consultas/api/${consulta.id}/`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data_agendada: dataFormatadaDjango,
+            status: status,
+            motivo: motivo,
+            nivel_prioridade: nivelPrioridade,
+            paciente: pacienteId,
+            medico: medicoId,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errJson = await response.json();
+        alert("Erro no Django ao atualizar: " + JSON.stringify(errJson));
+        return;
+      }
+
       navigation.navigate("Consultas");
     } catch (error) {
-      console.log(error);
+      console.log("Erro ao salvar edição:", error);
     } finally {
       setSaving(false);
     }
@@ -67,35 +137,89 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
         value={dataAgendada}
         onChangeText={setDataAgendada}
         style={styles.input}
+        placeholder="YYYY-MM-DD HH:MM"
       />
 
       <Text style={styles.label}>Status</Text>
-      <TextInput value={status} onChangeText={setStatus} style={styles.input} />
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={status}
+          onValueChange={(itemValue) => setStatus(itemValue)}
+          style={styles.pickerInternal}
+        >
+          <Picker.Item label="Agendada" value="Agendada" />
+          <Picker.Item label="Realizada" value="Realizada" />
+          <Picker.Item label="Cancelada" value="Cancelada" />
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Nível de Prioridade</Text>
-      <TextInput
-        value={nivelPrioridade}
-        onChangeText={setNivelPrioridade}
-        style={styles.input}
-      />
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={nivelPrioridade}
+          onValueChange={(itemValue) => setNivelPrioridade(itemValue)}
+          style={styles.pickerInternal}
+        >
+          <Picker.Item label="Baixa" value="Baixa" />
+          <Picker.Item label="Normal" value="Normal" />
+          <Picker.Item label="Alta" value="Alta" />
+          <Picker.Item label="Urgência" value="Urgência" />
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>ID do Paciente</Text>
-      <TextInput
-        value={pacienteId}
-        onChangeText={setPacienteId}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <Text style={styles.label}>Paciente</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={pacienteId}
+          onValueChange={(itemValue) =>
+            setPacienteId(itemValue ? Number(itemValue) : undefined)
+          }
+          style={styles.pickerInternal}
+        >
+          <Picker.Item label="----------" value={undefined} />
+          {listaPacientes.map((item) => (
+            <Picker.Item
+              key={item.id}
+              label={
+                item.nome ||
+                item.nome_completo ||
+                item.first_name ||
+                item.user?.first_name ||
+                `ID: ${item.id}`
+              }
+              value={item.id}
+            />
+          ))}
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>ID do Médico</Text>
-      <TextInput
-        value={medicoId}
-        onChangeText={setMedicoId}
-        keyboardType="numeric"
-        style={styles.input}
-      />
+      <Text style={styles.label}>Médico</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={medicoId}
+          onValueChange={(itemValue) =>
+            setMedicoId(itemValue ? Number(itemValue) : undefined)
+          }
+          style={styles.pickerInternal}
+        >
+          <Picker.Item label="----------" value={undefined} />
+          {listaMedicos.map((item) => (
+            <Picker.Item
+              key={item.id}
+              label={
+                item.nome ||
+                item.nome_completo ||
+                item.first_name ||
+                item.user?.first_name ||
+                `ID: ${item.id}`
+              }
+              value={item.id}
+            />
+          ))}
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>Motivo</Text>
+      <Text style={styles.label}>Motivo da Consulta</Text>
       <TextInput
         value={motivo}
         onChangeText={setMotivo}
@@ -128,8 +252,30 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
-  label: { fontWeight: "600", marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10 },
+  label: { fontWeight: "600", marginTop: 12, marginBottom: 4, color: "#333" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    color: "#000",
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 5,
+    overflow: "hidden",
+  },
+  pickerInternal: {
+    height: 45,
+    width: "100%",
+    color: "#000",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderWidth: 0,
+  },
   fullSaveButton: {
     backgroundColor: "#4B7BE5",
     width: "100%",
