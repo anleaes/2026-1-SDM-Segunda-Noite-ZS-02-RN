@@ -12,7 +12,10 @@ import CreatePacienteScreen from "../screens/CreatePacienteScreen";
 import EditCidScreen from "../screens/EditCidScreen";
 import EditPacienteScreen from "../screens/EditPacienteScreen";
 import HomeScreen from "../screens/HomeScreen";
-import PacienteScreen from "../screens/PacienteScreen";
+import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
+import AtestadoScreen, { Atestado } from "../screens/AtestadoScreen";
+import CreateAtestadoScreen from "../screens/CreateAtestadoScreen";
+import EditAtestadoScreen from "../screens/EditAtestadoScreen";
 
 // IMPORTS DA TUA PARTE (MÉDICO)
 import CreateMedicoScreen from "../screens/CreateMedicoScreen";
@@ -81,8 +84,8 @@ export interface Pacientes {
   altura: number;
   endereco: string;
   sobrenome: string;
-  cpf: number;
-  telefone: number;
+  cpf: string;
+  telefone: string;
   email: string;
 }
 
@@ -125,6 +128,10 @@ export type DrawerParamList = {
   Anamnese: undefined;
   CreateAnamnese: undefined;
   EditAnamnese: { anamnese: Anamnese };
+
+  Atestados: undefined;
+  CreateAtestado: undefined;
+  EditAtestado: { atestado: Atestado; };
 };
 
 // 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
@@ -436,6 +443,50 @@ const DrawerNavigator = () => {
         options={{
           title: "Editar Resultado",
           drawerItemStyle: { display: "none" },
+        }}
+      />
+
+      <Drawer.Screen
+        name="Atestados"
+        component={AtestadoScreen}
+        options={{
+          title: 'Atestados',
+          drawerIcon: ({
+            color,
+            size,
+          }) => (
+            <Ionicons
+              name="document-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="CreateAtestado"
+        component={
+          CreateAtestadoScreen
+        }
+        options={{
+          title: 'Novo Atestado',
+          drawerItemStyle: {
+            display: 'none',
+          },
+        }}
+      />
+
+      <Drawer.Screen
+        name="EditAtestado"
+        component={
+          EditAtestadoScreen
+        }
+        options={{
+          title: 'Editar Atestado',
+          drawerItemStyle: {
+            display: 'none',
+          },
         }}
       />
     </Drawer.Navigator>

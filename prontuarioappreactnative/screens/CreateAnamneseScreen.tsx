@@ -1,8 +1,10 @@
+import { Picker } from "@react-native-picker/picker"; // <-- Importado o Picker
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Button,
   ScrollView,
   StyleSheet,
@@ -24,7 +26,42 @@ const CreateAnamneseScreen = ({ navigation }: Props) => {
   const [pacienteId, setPacienteId] = useState("");
   const [medicoId, setMedicoId] = useState("");
 
+  // Novos estados para armazenar as listas vindas da API
+  const [listaPacientes, setListaPacientes] = useState<any[]>([]);
+  const [listaMedicos, setListaMedicos] = useState<any[]>([]);
+  const [loadingDados, setLoadingDados] = useState(true);
+
   const [saving, setSaving] = useState(false);
+
+  // Busca os pacientes e médicos da API quando a tela é carregada
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingDados(true);
+        // Busca pacientes
+        const resPacientes = await fetch("http://127.0.0.1:8000/paciente/api/");
+        const dataPacientes = await resPacientes.json();
+
+        // Busca médicos
+        const resMedicos = await fetch("http://127.0.0.1:8000/medico/api/");
+        const dataMedicos = await resMedicos.json();
+
+        // O DRF pode retornar uma array direto ou um objeto com a chave "results" se houver paginação
+        setListaPacientes(dataPacientes.results || dataPacientes);
+        setListaMedicos(dataMedicos.results || dataMedicos);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        Alert.alert(
+          "Erro",
+          "Não foi possível carregar os pacientes e médicos.",
+        );
+      } finally {
+        setLoadingDados(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -39,6 +76,11 @@ const CreateAnamneseScreen = ({ navigation }: Props) => {
   );
 
   const handleSave = async () => {
+    if (!pacienteId || !medicoId) {
+      Alert.alert("Aviso", "Por favor, selecione um paciente e um médico.");
+      return;
+    }
+
     setSaving(true);
 
     await fetch("http://127.0.0.1:8000/anamnese/api/", {
@@ -83,6 +125,17 @@ const CreateAnamneseScreen = ({ navigation }: Props) => {
     </TouchableOpacity>
   );
 
+  if (loadingDados) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#4B7BE5" />
+        <Text style={{ textAlign: "center", marginTop: 10 }}>
+          Carregando dados...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -90,21 +143,39 @@ const CreateAnamneseScreen = ({ navigation }: Props) => {
     >
       <Text style={styles.title}>Nova Anamnese</Text>
 
-      <Text style={styles.label}>ID do Paciente</Text>
-      <TextInput
-        value={pacienteId}
-        onChangeText={setPacienteId}
-        style={styles.input}
-        keyboardType="numeric"
-      />
+      <Text style={styles.label}>Paciente</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={pacienteId}
+          onValueChange={(itemValue) => setPacienteId(itemValue)}
+        >
+          <Picker.Item label="Selecione um paciente..." value="" />
+          {listaPacientes.map((paciente) => (
+            <Picker.Item
+              key={paciente.id}
+              label={paciente.nome}
+              value={paciente.id}
+            />
+          ))}
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>ID do Médico</Text>
-      <TextInput
-        value={medicoId}
-        onChangeText={setMedicoId}
-        style={styles.input}
-        keyboardType="numeric"
-      />
+      <Text style={styles.label}>Médico</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={medicoId}
+          onValueChange={(itemValue) => setMedicoId(itemValue)}
+        >
+          <Picker.Item label="Selecione um médico..." value="" />
+          {listaMedicos.map((medico) => (
+            <Picker.Item
+              key={medico.id}
+              label={medico.nome}
+              value={medico.id}
+            />
+          ))}
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Queixa Principal</Text>
       <TextInput
@@ -182,6 +253,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: "#f9f9f9",
+  },
+  pickerContainer: {
+    // <-- Estilo novo para o Picker parecer com o Input
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+    overflow: "hidden",
   },
   choiceContainer: {
     flexDirection: "row",
