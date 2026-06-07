@@ -6,9 +6,6 @@ import {
 } from "@react-navigation/drawer";
 import React from "react";
 
-import CreateMedicoScreen from "../screens/CreateMedicoScreen";
-import EditMedicoScreen from "../screens/EditMedicoScreen";
-import MedicoScreen, { Medico } from "../screens/MedicoScreen";
 import CustomDrawerContent from "../components/CustomDrawerContent";
 import CidScreen, { Cid } from "../screens/CidScreen";
 import CreateCidScreen from "../screens/CreateCidScreen";
@@ -126,7 +123,7 @@ const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContentComponent {...props} />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerActiveTintColor: "#4B7BE5",
         drawerLabelStyle: {
