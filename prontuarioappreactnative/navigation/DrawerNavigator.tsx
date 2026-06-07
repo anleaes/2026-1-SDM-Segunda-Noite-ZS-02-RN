@@ -6,22 +6,10 @@ import {
 } from "@react-navigation/drawer";
 import React from "react";
 
-import CidScreen, { Cid } from "../screens/CidScreen";
-import CreateCidScreen from "../screens/CreateCidScreen";
-import EditCidScreen from "../screens/EditCidScreen";
-import HomeScreen from "../screens/HomeScreen";
-
-import CustomDrawerContent from "../components/CustomDrawerContent";
-import CreatePacienteScreen from "../screens/CreatePacienteScreen";
-import EditPacienteScreen from "../screens/EditPacienteScreen";
-import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
-
 import CreateMedicoScreen from "../screens/CreateMedicoScreen";
 import EditMedicoScreen from "../screens/EditMedicoScreen";
 import MedicoScreen, { Medico } from "../screens/MedicoScreen";
-
-
-// IMPORTS DOS TEUS COLEGAS
+import CustomDrawerContent from "../components/CustomDrawerContent";
 import CidScreen, { Cid } from "../screens/CidScreen";
 import CreateCidScreen from "../screens/CreateCidScreen";
 import CreatePacienteScreen from "../screens/CreatePacienteScreen";
@@ -35,8 +23,6 @@ import EditExameSolicitadoScreen from "../screens/EditExameSolicitadoScreen";
 import ResultadoExameScreen, { ResultadoExame, } from "../screens/ResultadoExameScreen";
 import CreateResultadoExameScreen from "../screens/CreateResultadoExameScreen";
 import EditResultadoExameScreen from "../screens/EditResultadoExameScreen";
-
-// IMPORTS DA TUA PARTE (ARGEL)
 import ConsultasScreen from "../screens/ConsultasScreen";
 import CreateConsultaScreen from "../screens/CreateConsultaScreen";
 import CreateMedicamentoScreen from "../screens/CreateMedicamentoScreen";
@@ -47,8 +33,6 @@ import EditReceitaScreen from "../screens/EditReceitaScreen";
 import MedicamentosScreen from "../screens/MedicamentosScreen";
 import ReceitasScreen from "../screens/ReceitasScreen";
 
-
-// TIPAGENS TÉCNICAS DA TUA PARTE (DIAGRAMA DE CLASSES)
 export type Consulta = {
   id: number;
   data_agendada: string;
@@ -114,15 +98,7 @@ export type DrawerParamList = {
   EditResultadoExame: { resultado: ResultadoExame; };
 };
 
-// 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
-const CustomDrawerContent = (props: any) => {
-  return (
-    <DrawerContentScrollView {...props}>
-      <DrawerItemList {...props} />
-    </DrawerContentScrollView>
-  );
 
-};
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -228,9 +204,32 @@ const DrawerNavigator = () => {
         options={{
           title: "Médicos",
           drawerIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons
+              name="person-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="CreateMedico"
+        component={CreateMedicoScreen}
+        options={{
+          title: "Novo Médico",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
 
-      {/* 📅 CONSULTAS (ARGEL) */}
+     <Drawer.Screen
+        name="EditMedico"
+        component={EditMedicoScreen}
+        options={{
+          title: "Editar Médico",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+
       <Drawer.Screen
         name="Consultas"
         component={ConsultasScreen}
@@ -242,11 +241,8 @@ const DrawerNavigator = () => {
         }}
       />
 
+    
       <Drawer.Screen
-        name="CreateMedico"
-        component={CreateMedicoScreen}
-        options={{
-          title: "Novo Médico",  
         name="CreateConsulta"
         component={CreateConsultaScreen}
         options={{
@@ -256,10 +252,6 @@ const DrawerNavigator = () => {
       />
 
       <Drawer.Screen
-        name="EditMedico"
-        component={EditMedicoScreen}
-        options={{
-          title: "Editar Médico",
         name="EditConsulta"
         component={EditConsultaScreen}
         options={{
@@ -268,7 +260,6 @@ const DrawerNavigator = () => {
         }}
       />
 
-      {/* 💊 MEDICAMENTOS (ARGEL) */}
       <Drawer.Screen
         name="Medicamentos"
         component={MedicamentosScreen}
@@ -298,7 +289,6 @@ const DrawerNavigator = () => {
         }}
       />
 
-      {/* 📄 RECEITAS (ARGEL) */}
       <Drawer.Screen
         name="Receitas"
         component={ReceitasScreen}
