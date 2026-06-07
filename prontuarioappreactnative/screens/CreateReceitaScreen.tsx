@@ -1,61 +1,191 @@
+import { Picker } from "@react-native-picker/picker";
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Button,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-import { BASE_URL } from "../config";
 import { DrawerParamList } from "../navigation/DrawerNavigator";
 
 type Props = DrawerScreenProps<DrawerParamList, "CreateReceita">;
 
+interface ReceitaMedicamento {
+  medicamento: number | undefined;
+  frequencia: string;
+  duracao_dias: string;
+  dose: string;
+  concentracao: string;
+}
+
 const CreateReceitaScreen = ({ navigation }: Props) => {
+  const API_LOCAL = "http://localhost:8000";
+
+  const [consultaId, setConsultaId] = useState<number | undefined>(undefined);
   const [dataEmissao, setDataEmissao] = useState("");
   const [validade, setValidade] = useState("");
   const [instrucoes, setInstrucoes] = useState("");
-  const [eDigital, setEDigital] = useState(false);
-  const [consultaId, setConsultaId] = useState("");
+  const [eDigital, setEDigital] = useState(true);
+
+  const [detalhesMedicamentos, setDetalhesMedicamentos] = useState<
+    ReceitaMedicamento[]
+  >([]);
+  const [listaConsultas, setListaConsultas] = useState<any[]>([]);
+  const [listaMedicamentos, setListaMedicamentos] = useState<any[]>([]);
+  const [listaPacientes, setListaPacientes] = useState<any[]>([]);
+  const [listaMedicos, setListaMedicos] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
+      setConsultaId(undefined);
       setDataEmissao("");
       setValidade("");
       setInstrucoes("");
-      setEDigital(false);
-      setConsultaId("");
+      setEDigital(true);
+      setDetalhesMedicamentos([]);
+
+      fetch(`${API_LOCAL}/consulta/api/`)
+        .then((res) => res.json())
+        .then((data) =>
+          setListaConsultas(Array.isArray(data) ? data : data.results || []),
+        )
+        .catch((err) => console.log("Erro consultas:", err));
+
+      fetch(`${API_LOCAL}/medicamento/api/`)
+        .then((res) => res.json())
+        .then((data) =>
+          setListaMedicamentos(Array.isArray(data) ? data : data.results || []),
+        )
+        .catch((err) => console.log("Erro medicamentos:", err));
+
+      fetch(`${API_LOCAL}/paciente/api/`)
+        .then((res) => res.json())
+        .then((data) =>
+          setListaPacientes(Array.isArray(data) ? data : data.results || []),
+        )
+        .catch((err) => console.log("Erro pacientes:", err));
+
+      fetch(`${API_LOCAL}/medico/api/`)
+        .then((res) => res.json())
+        .then((data) =>
+          setListaMedicos(Array.isArray(data) ? data : data.results || []),
+        )
+        .catch((err) => console.log("Erro médicos:", err));
     }, []),
   );
 
+  const handleAddItem = () => {
+    setDetalhesMedicamentos([
+      ...detalhesMedicamentos,
+      {
+        medicamento: undefined,
+        frequencia: "",
+        duracao_dias: "",
+        dose: "",
+        concentracao: "",
+      },
+    ]);
+  };
+
+  const updateItem = (
+    index: number,
+    field: keyof ReceitaMedicamento,
+    value: any,
+  ) => {
+    const novosItens = [...detalhesMedicamentos];
+    novosItens[index] = { ...novosItens[index], [field]: value };
+    setDetalhesMedicamentos(novosItens);
+  };
+
+  const getDescricaoConsulta = (consulta: any) => {
+    const pacId =
+      consulta.paciente && typeof consulta.paciente === "object"
+        ? consulta.paciente.id
+        : consulta.paciente;
+    const pacienteObj = listaPacientes.find(
+      (p) => Number(p.id) === Number(pacId),
+    );
+    const nomePaciente = pacienteObj
+      ? pacienteObj.nome
+      : `Paciente ID ${pacId}`;
+
+    const medId =
+      consulta.medico && typeof consulta.medico === "object"
+        ? consulta.medico.id
+        : consulta.medico;
+    const medicoObj = listaMedicos.find((m) => Number(m.id) === Number(medId));
+    const nomeMedico = medicoObj ? medicoObj.nome : `Médico ID ${medId}`;
+
+    const dataTexto = consulta.data_emissao || consulta.data_agendada || "";
+    const dataFormatada = dataTexto
+      ? ` em ${dataTexto.substring(8, 10)}/${dataTexto.substring(5, 7)}/${dataTexto.substring(0, 4)}`
+      : "";
+
+    return `Consulta de ${nomePaciente} com Dr(a). ${nomeMedico}${dataFormatada}`;
+  };
+
   const handleSave = async () => {
+    if (!consultaId) {
+      alert("Por favor, selecione uma consulta.");
+      return;
+    }
+
     try {
       setSaving(true);
+      const medicamentosFinaisIds = detalhesMedicamentos
+        .map((item) => item.medicamento)
+        .filter((id) => id !== undefined) as number[];
 
-      await fetch(`${BASE_URL}/api/receitas/`, {
+      const responseReceita = await fetch(`${API_LOCAL}/receita/api/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          consulta: consultaId,
           data_emissao: dataEmissao,
           validade: validade,
           instrucoes: instrucoes,
           e_digital: eDigital,
-          consulta: parseInt(consultaId),
+          medicamentos: medicamentosFinaisIds,
         }),
       });
 
-      navigation.navigate("Receitas");
+      if (!responseReceita.ok) {
+        const err = await responseReceita.json();
+        alert("Erro ao criar receita: " + JSON.stringify(err));
+        return;
+      }
+
+      const novaReceita = await responseReceita.json();
+
+      for (const item of detalhesMedicamentos) {
+        if (!item.medicamento) continue;
+
+        await fetch(`${API_LOCAL}/receitaMedicamento/api/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            receita: novaReceita.id,
+            medicamento: item.medicamento,
+            frequencia: item.frequencia,
+            duracao_dias: parseInt(item.duracao_dias, 10) || 0,
+            dose: item.dose,
+            concentracao: item.concentracao,
+          }),
+        });
+      }
+
+      navigation.navigate("Receitas" as any);
     } catch (error) {
-      console.log("Erro ao salvar receita:", error);
+      console.log(error);
+      alert("Erro de conexão.");
     } finally {
       setSaving(false);
     }
@@ -63,7 +193,25 @@ const CreateReceitaScreen = ({ navigation }: Props) => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Nova Receita</Text>
+      <Text style={styles.sectionTitle}>Dados Gerais da Receita</Text>
+
+      <Text style={styles.label}>Consulta</Text>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={consultaId}
+          onValueChange={(val) => setConsultaId(val ? Number(val) : undefined)}
+          style={styles.pickerWebNative}
+        >
+          <Picker.Item label="Selecione a consulta..." value={undefined} />
+          {listaConsultas.map((c) => (
+            <Picker.Item
+              key={c.id}
+              label={getDescricaoConsulta(c)}
+              value={c.id}
+            />
+          ))}
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Data de Emissão</Text>
       <TextInput
@@ -81,80 +229,181 @@ const CreateReceitaScreen = ({ navigation }: Props) => {
         placeholder="YYYY-MM-DD"
       />
 
-      <Text style={styles.label}>ID da Consulta Vinculada</Text>
-      <TextInput
-        value={consultaId}
-        onChangeText={setConsultaId}
-        keyboardType="numeric"
-        style={styles.input}
-        placeholder="Digite o ID numérico da consulta"
-      />
-
-      <Text style={styles.label}>Instruções de Uso</Text>
+      <Text style={styles.label}>Instruções Gerais</Text>
       <TextInput
         value={instrucoes}
         onChangeText={setInstrucoes}
-        style={[styles.input, { height: 100 }]}
+        style={[styles.input, { height: 80 }]}
         multiline
-        placeholder="Descreva a posologia e orientações gerais"
       />
 
       <View style={styles.switchRow}>
-        <Text style={styles.label}>É receita digital?</Text>
+        <Text style={styles.label}>É Digital?</Text>
         <Switch value={eDigital} onValueChange={setEDigital} />
       </View>
 
-      <View style={styles.buttonGap}>
-        {saving ? (
-          <ActivityIndicator size="large" color="#4B7BE5" />
-        ) : (
-          <Button title="Salvar" onPress={handleSave} color="#4B7BE5" />
-        )}
-      </View>
+      <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+        Medicamentos (ReceitaMedicamento)
+      </Text>
 
-      <Button
-        title="Voltar"
-        onPress={() => navigation.navigate("Receitas")}
-        color="#777"
-      />
+      {detalhesMedicamentos.map((item, index) => (
+        <View key={index} style={styles.itemBlock}>
+          <Text style={styles.label}>Medicamento</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={item.medicamento}
+              onValueChange={(val) =>
+                updateItem(index, "medicamento", val ? Number(val) : undefined)
+              }
+              style={styles.pickerWebNative}
+            >
+              <Picker.Item
+                label="Selecione um medicamento..."
+                value={undefined}
+              />
+              {listaMedicamentos.map((m) => (
+                <Picker.Item
+                  key={m.id}
+                  label={
+                    m.principio_ativo || m.nome_referencia || `ID: ${m.id}`
+                  }
+                  value={m.id}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <Text style={styles.label}>Frequência</Text>
+          <TextInput
+            value={item.frequencia}
+            onChangeText={(t) => updateItem(index, "frequencia", t)}
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Duração em Dias</Text>
+          <TextInput
+            value={item.duracao_dias}
+            onChangeText={(t) => updateItem(index, "duracao_dias", t)}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Dose</Text>
+          <TextInput
+            value={item.dose}
+            onChangeText={(t) => updateItem(index, "dose", t)}
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Concentração</Text>
+          <TextInput
+            value={item.concentracao}
+            onChangeText={(t) => updateItem(index, "concentracao", t)}
+            style={styles.input}
+          />
+        </View>
+      ))}
+
+      <TouchableOpacity style={styles.addButton} onPress={handleAddItem}>
+        <Text style={styles.addButtonText}>+ ADICIONAR MEDICAMENTO</Text>
+      </TouchableOpacity>
+
+      <View style={{ marginTop: 20, paddingBottom: 40 }}>
+        {saving ? (
+          <ActivityIndicator
+            size="large"
+            color="#4B7BE5"
+            style={{ marginVertical: 10 }}
+          />
+        ) : (
+          <TouchableOpacity style={styles.fullSaveButton} onPress={handleSave}>
+            <Text style={styles.fullButtonText}>SALVAR</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={styles.fullBackButton}
+          onPress={() => navigation.navigate("Receitas" as any)}
+        >
+          <Text style={styles.fullButtonText}>VOLTAR</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 20,
+  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 12,
-    alignSelf: "center",
+    color: "#333",
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingBottom: 4,
   },
-  label: {
-    fontWeight: "600",
-    marginTop: 12,
-    marginBottom: 4,
-  },
+  label: { fontWeight: "600", marginTop: 10, marginBottom: 4, color: "#333" },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
+    color: "#000",
+    backgroundColor: "#fff",
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 5,
+    paddingHorizontal: 5,
+  },
+  pickerWebNative: {
+    height: 45,
+    width: "100%",
+    color: "#000",
+    borderStyle: "none",
+    backgroundColor: "transparent",
   },
   switchRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 14,
-    paddingRight: 4,
+    marginVertical: 10,
   },
-  buttonGap: {
-    marginTop: 24,
-    marginBottom: 8,
+  itemBlock: {
+    padding: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 8,
+    marginBottom: 15,
   },
+  addButton: {
+    padding: 12,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  addButtonText: { fontWeight: "bold", color: "#4B7BE5" },
+  fullSaveButton: {
+    backgroundColor: "#4B7BE5",
+    width: "100%",
+    paddingVertical: 12,
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  fullBackButton: {
+    backgroundColor: "#2196F3",
+    width: "100%",
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  fullButtonText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
 });
 
 export default CreateReceitaScreen;
