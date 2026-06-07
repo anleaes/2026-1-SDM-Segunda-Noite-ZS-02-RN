@@ -41,6 +41,10 @@ import ResultadoExameScreen, {
   ResultadoExame,
 } from "../screens/ResultadoExameScreen";
 
+import AnamneseScreen, { Anamnese } from "../screens/AnamneseScreen";
+import CreateAnamneseScreen from "../screens/CreateAnamneseScreen";
+import EditAnamneseScreen from "../screens/EditAnamneseScreen";
+
 // TIPAGENS TÉCNICAS DA TUA PARTE (DIAGRAMA DE CLASSES)
 export type Consulta = {
   id: number;
@@ -105,6 +109,10 @@ export type DrawerParamList = {
   ResultadosExame: undefined;
   CreateResultadoExame: undefined;
   EditResultadoExame: { resultado: ResultadoExame };
+
+  Anamnese: undefined;
+  CreateAnamnese: undefined;
+  EditAnamnese: { anamnese: Anamnese };
 };
 
 // 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
@@ -237,6 +245,34 @@ const DrawerNavigator = () => {
         component={EditMedicoScreen}
         options={{
           title: "Editar Médico",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+
+      {/* ANAMNESES */}
+      <Drawer.Screen
+        name="Anamnese"
+        component={AnamneseScreen}
+        options={{
+          title: "Anamneses",
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="medical" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="CreateAnamnese"
+        component={CreateAnamneseScreen}
+        options={{
+          title: "Nova Anamnese",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="EditAnamnese"
+        component={EditAnamneseScreen}
+        options={{
+          title: "Editar Anamnese",
           drawerItemStyle: { display: "none" },
         }}
       />
