@@ -84,8 +84,8 @@ export interface Pacientes {
   altura: number;
   endereco: string;
   sobrenome: string;
-  cpf: number;
-  telefone: number;
+  cpf: string;
+  telefone: string;
   email: string;
 }
 
