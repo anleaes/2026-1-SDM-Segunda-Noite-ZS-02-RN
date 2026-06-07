@@ -236,7 +236,7 @@ const EditAnamneseScreen = ({ route, navigation }: Props) => {
       <View style={{ marginTop: 10 }}>
         <Button
           title="Voltar"
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate("Anamnese")}
           color="#888"
         />
       </View>
