@@ -47,7 +47,7 @@ const EditResultadoExameScreen = ({
 
   const fetchExames = async () => {
     const response = await fetch(
-      'http://127.0.0.1:8000/examesolicitado/api/'
+      'http://127.0.0.1:8000/exameSolicitado/api/'
     );
 
     const data =
