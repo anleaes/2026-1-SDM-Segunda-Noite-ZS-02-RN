@@ -1,5 +1,5 @@
-import { DrawerScreenProps } from '@react-navigation/drawer';
-import React, { useEffect, useState } from 'react';
+import { DrawerScreenProps } from "@react-navigation/drawer";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Button,
@@ -7,24 +7,18 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { DrawerParamList } from '../navigation/DrawerNavigator';
+import { DrawerParamList } from "../navigation/DrawerNavigator";
 
-type Props = DrawerScreenProps<
-  DrawerParamList,
-  'EditPaciente'
->;
+type Props = DrawerScreenProps<DrawerParamList, "EditPaciente">;
 
-const EditPacienteScreen = ({
-  route,
-  navigation,
-}: Props) => {
+const EditPacienteScreen = ({ route, navigation }: Props) => {
   const { paciente } = route.params;
 
   const [nome, setNome] = useState(paciente.nome);
   const [dataNascimento, setDataNascimento] = useState(
-    paciente.data_nascimento
+    paciente.data_nascimento,
   );
   const [peso, setPeso] = useState(String(paciente.peso));
   const [altura, setAltura] = useState(String(paciente.altura));
@@ -44,26 +38,23 @@ const EditPacienteScreen = ({
     try {
       setSaving(true);
 
-      await fetch(
-        `http://127.0.0.1:8000/pacientes/${paciente.id}/`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            nome,
-            data_nascimento: dataNascimento,
-            peso: parseFloat(peso),
-            altura: parseFloat(altura),
-            endereco,
-          }),
-        }
-      );
+      await fetch(`http://127.0.0.1:8000/paciente/${paciente.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          data_nascimento: dataNascimento,
+          peso: parseFloat(peso),
+          altura: parseFloat(altura),
+          endereco,
+        }),
+      });
 
-      navigation.navigate('Pacientes');
+      navigation.navigate("Pacientes");
     } catch (error) {
-      console.log('Erro ao salvar paciente:', error);
+      console.log("Erro ao salvar paciente:", error);
     } finally {
       setSaving(false);
     }
@@ -72,11 +63,7 @@ const EditPacienteScreen = ({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Nome</Text>
-      <TextInput
-        value={nome}
-        onChangeText={setNome}
-        style={styles.input}
-      />
+      <TextInput value={nome} onChangeText={setNome} style={styles.input} />
 
       <Text style={styles.label}>Data de nascimento</Text>
       <TextInput
@@ -115,10 +102,7 @@ const EditPacienteScreen = ({
         <Button title="Salvar" onPress={handleSave} color="#4B7BE5" />
       )}
 
-      <Button
-        title="Voltar"
-        onPress={() => navigation.navigate('Pacientes')}
-      />
+      <Button title="Voltar" onPress={() => navigation.navigate("Pacientes")} />
     </View>
   );
 };
@@ -127,16 +111,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   label: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 12,
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
   },

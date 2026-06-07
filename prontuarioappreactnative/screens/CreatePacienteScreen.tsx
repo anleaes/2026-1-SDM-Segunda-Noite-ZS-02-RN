@@ -44,7 +44,7 @@ const CreatePacienteScreen = ({ navigation }: Props) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const res = await fetch("http://localhost:8000/pacientes/api/", {
+    const res = await fetch("http://localhost:8000/paciente/api/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
