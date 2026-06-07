@@ -12,7 +12,7 @@ import CreatePacienteScreen from "../screens/CreatePacienteScreen";
 import EditCidScreen from "../screens/EditCidScreen";
 import EditPacienteScreen from "../screens/EditPacienteScreen";
 import HomeScreen from "../screens/HomeScreen";
-import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
+import PacienteScreen from "../screens/PacienteScreen";
 
 // IMPORTS DA TUA PARTE (MÉDICO)
 import CreateMedicoScreen from "../screens/CreateMedicoScreen";
@@ -73,6 +73,19 @@ export type Receita = {
   consulta: number;
 };
 
+export interface Pacientes {
+  id: number;
+  nome: string;
+  data_nascimento: string;
+  peso: number;
+  altura: number;
+  endereco: string;
+  sobrenome: string;
+  cpf: number;
+  telefone: number;
+  email: string;
+}
+
 // LISTA DE PARÂMETROS DE TODAS AS ROTAS DO PROJETO
 export type DrawerParamList = {
   Home: undefined;
@@ -83,7 +96,7 @@ export type DrawerParamList = {
 
   Pacientes: undefined;
   CreatePaciente: undefined;
-  EditPaciente: { paciente: Paciente };
+  EditPaciente: { paciente: Pacientes };
 
   Medicos: undefined;
   CreateMedico: undefined;
