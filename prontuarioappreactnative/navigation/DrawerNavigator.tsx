@@ -6,7 +6,6 @@ import {
 } from "@react-navigation/drawer";
 import React from "react";
 
-import CustomDrawerContent from "../components/CustomDrawerContent";
 import CidScreen, { Cid } from "../screens/CidScreen";
 import CreateCidScreen from "../screens/CreateCidScreen";
 import CreatePacienteScreen from "../screens/CreatePacienteScreen";
@@ -115,7 +114,14 @@ export type DrawerParamList = {
   EditAnamnese: { anamnese: Anamnese };
 };
 
-
+// 🛠️ APENAS ESTA FUNÇÃO FOI ADICIONADA PARA MATAR O ERRO
+const CustomDrawerContentComponent = (props: any) => {
+  return (
+    <DrawerContentScrollView {...props}>
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
+};
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -123,7 +129,7 @@ const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={(props) => <CustomDrawerContentComponent {...props} />}
       screenOptions={{
         drawerActiveTintColor: "#4B7BE5",
         drawerLabelStyle: {
@@ -219,14 +225,11 @@ const DrawerNavigator = () => {
         options={{
           title: "Médicos",
           drawerIcon: ({ color, size }) => (
-            <Ionicons
-              name="person-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
+
       <Drawer.Screen
         name="CreateMedico"
         component={CreateMedicoScreen}
@@ -236,7 +239,7 @@ const DrawerNavigator = () => {
         }}
       />
 
-     <Drawer.Screen
+      <Drawer.Screen
         name="EditMedico"
         component={EditMedicoScreen}
         options={{
@@ -245,6 +248,35 @@ const DrawerNavigator = () => {
         }}
       />
 
+      {/* ANAMNESES */}
+      <Drawer.Screen
+        name="Anamnese"
+        component={AnamneseScreen}
+        options={{
+          title: "Anamneses",
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="medical" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="CreateAnamnese"
+        component={CreateAnamneseScreen}
+        options={{
+          title: "Nova Anamnese",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="EditAnamnese"
+        component={EditAnamneseScreen}
+        options={{
+          title: "Editar Anamnese",
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+
+      {/* 📅 CONSULTAS (ARGEL) */}
       <Drawer.Screen
         name="Consultas"
         component={ConsultasScreen}
@@ -256,7 +288,6 @@ const DrawerNavigator = () => {
         }}
       />
 
-    
       <Drawer.Screen
         name="CreateConsulta"
         component={CreateConsultaScreen}
@@ -275,6 +306,7 @@ const DrawerNavigator = () => {
         }}
       />
 
+      {/* 💊 MEDICAMENTOS (ARGEL) */}
       <Drawer.Screen
         name="Medicamentos"
         component={MedicamentosScreen}
@@ -304,6 +336,7 @@ const DrawerNavigator = () => {
         }}
       />
 
+      {/* 📄 RECEITAS (ARGEL) */}
       <Drawer.Screen
         name="Receitas"
         component={ReceitasScreen}
