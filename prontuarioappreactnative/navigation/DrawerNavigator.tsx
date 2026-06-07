@@ -6,6 +6,21 @@ import {
 } from "@react-navigation/drawer";
 import React from "react";
 
+import CidScreen, { Cid } from "../screens/CidScreen";
+import CreateCidScreen from "../screens/CreateCidScreen";
+import EditCidScreen from "../screens/EditCidScreen";
+import HomeScreen from "../screens/HomeScreen";
+
+import CustomDrawerContent from "../components/CustomDrawerContent";
+import CreatePacienteScreen from "../screens/CreatePacienteScreen";
+import EditPacienteScreen from "../screens/EditPacienteScreen";
+import PacienteScreen, { Paciente } from "../screens/PacienteScreen";
+
+import CreateMedicoScreen from "../screens/CreateMedicoScreen";
+import EditMedicoScreen from "../screens/EditMedicoScreen";
+import MedicoScreen, { Medico } from "../screens/MedicoScreen";
+
+
 // IMPORTS DOS TEUS COLEGAS
 import CidScreen, { Cid } from "../screens/CidScreen";
 import CreateCidScreen from "../screens/CreateCidScreen";
@@ -31,6 +46,7 @@ import EditMedicamentoScreen from "../screens/EditMedicamentoScreen";
 import EditReceitaScreen from "../screens/EditReceitaScreen";
 import MedicamentosScreen from "../screens/MedicamentosScreen";
 import ReceitasScreen from "../screens/ReceitasScreen";
+
 
 // TIPAGENS TÉCNICAS DA TUA PARTE (DIAGRAMA DE CLASSES)
 export type Consulta = {
@@ -73,6 +89,10 @@ export type DrawerParamList = {
   CreatePaciente: undefined;
   EditPaciente: { paciente: Paciente };
 
+  Medicos: undefined;
+  CreateMedico: undefined;
+  EditMedico: { medico: Medico };
+
   Consultas: undefined;
   CreateConsulta: undefined;
   EditConsulta: { consulta: Consulta };
@@ -101,6 +121,7 @@ const CustomDrawerContent = (props: any) => {
       <DrawerItemList {...props} />
     </DrawerContentScrollView>
   );
+
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -200,6 +221,15 @@ const DrawerNavigator = () => {
         }}
       />
 
+      {/* MÉDICOS */}
+      <Drawer.Screen
+        name="Medicos"
+        component={MedicoScreen}
+        options={{
+          title: "Médicos",
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+
       {/* 📅 CONSULTAS (ARGEL) */}
       <Drawer.Screen
         name="Consultas"
@@ -213,6 +243,10 @@ const DrawerNavigator = () => {
       />
 
       <Drawer.Screen
+        name="CreateMedico"
+        component={CreateMedicoScreen}
+        options={{
+          title: "Novo Médico",  
         name="CreateConsulta"
         component={CreateConsultaScreen}
         options={{
@@ -222,6 +256,10 @@ const DrawerNavigator = () => {
       />
 
       <Drawer.Screen
+        name="EditMedico"
+        component={EditMedicoScreen}
+        options={{
+          title: "Editar Médico",
         name="EditConsulta"
         component={EditConsultaScreen}
         options={{
