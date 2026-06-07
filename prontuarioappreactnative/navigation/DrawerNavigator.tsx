@@ -30,7 +30,7 @@ import EditConsultaScreen from "../screens/EditConsultaScreen";
 import EditExameSolicitadoScreen from "../screens/EditExameSolicitadoScreen";
 import EditMedicamentoScreen from "../screens/EditMedicamentoScreen";
 import EditReceitaScreen from "../screens/EditReceitaScreen";
-//import EditResultadoExameScreen from "../screens/EditResultadoExameScreen";
+import EditResultadoExameScreen from "../screens/EditResultadoExameScreen";
 import ExameSolicitadoScreen, {
   ExameSolicitado,
 } from "../screens/ExameSolicitadoScreen";
@@ -417,14 +417,14 @@ const DrawerNavigator = () => {
         }}
       />
 
-      {/* <Drawer.Screen
+      <Drawer.Screen
         name="EditResultadoExame"
         component={EditResultadoExameScreen}
         options={{
           title: "Editar Resultado",
           drawerItemStyle: { display: "none" },
         }}
-      /> */}
+      />
     </Drawer.Navigator>
   );
 };
