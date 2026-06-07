@@ -72,7 +72,7 @@ const CreatePacienteScreen = ({ navigation }: Props) => {
       <TextInput
         value={sobrenome}
         onChangeText={setSobrenome}
-        style={[styles.input, { height: 100 }]}
+        style={styles.input}
         multiline
       />
       <Text style={styles.label}>CPF</Text>

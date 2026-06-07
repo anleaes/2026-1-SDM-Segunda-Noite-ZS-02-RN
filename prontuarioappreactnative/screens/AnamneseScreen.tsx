@@ -28,21 +28,35 @@ export type Anamnese = {
 
 const AnamneseScreen = ({ navigation }: Props) => {
   const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
+  const [pacientes, setPacientes] = useState<any[]>([]);
+  const [medicos, setMedicos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAnamneses = async () => {
+  const fetchDados = async () => {
     setLoading(true);
 
-    const response = await fetch("http://127.0.0.1:8000/anamnese/api/");
-    const data = await response.json();
+    // Busca as anamneses, pacientes e médicos ao mesmo tempo
+    const [resAnamneses, resPacientes, resMedicos] = await Promise.all([
+      fetch("http://127.0.0.1:8000/anamnese/api/"),
+      fetch("http://127.0.0.1:8000/paciente/api/"),
+      fetch("http://127.0.0.1:8000/medico/api/"),
+    ]);
 
-    setAnamneses(data);
+    const dataAnamneses = await resAnamneses.json();
+    const dataPacientes = await resPacientes.json();
+    const dataMedicos = await resMedicos.json();
+
+    // Salva os dados nos estados (com suporte a paginação do DRF, se houver)
+    setAnamneses(dataAnamneses.results || dataAnamneses);
+    setPacientes(dataPacientes.results || dataPacientes);
+    setMedicos(dataMedicos.results || dataMedicos);
+
     setLoading(false);
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchAnamneses();
+      fetchDados();
     }, []),
   );
 
@@ -54,6 +68,17 @@ const AnamneseScreen = ({ navigation }: Props) => {
     setAnamneses((prev) => prev.filter((a) => a.id !== id));
   };
 
+  // Funções para pegar o nome através do ID
+  const getNomePaciente = (id: number) => {
+    const paciente = pacientes.find((p) => p.id === id);
+    return paciente ? paciente.nome : "Desconhecido";
+  };
+
+  const getNomeMedico = (id: number) => {
+    const medico = medicos.find((m) => m.id === id);
+    return medico ? medico.nome : "Desconhecido";
+  };
+
   const renderItem = ({ item }: { item: Anamnese }) => {
     const dataFormatada = new Date(item.data_criacao).toLocaleDateString(
       "pt-BR",
@@ -62,9 +87,13 @@ const AnamneseScreen = ({ navigation }: Props) => {
     return (
       <View style={styles.card}>
         <Text style={styles.name}>Anamnese de {dataFormatada}</Text>
+
+        {/* Aqui os nomes são exibidos em vez dos IDs */}
         <Text style={styles.description}>
-          Paciente ID: {item.paciente} | Médico ID: {item.medico}
+          Paciente: {getNomePaciente(item.paciente)} | Médico:{" "}
+          {getNomeMedico(item.medico)}
         </Text>
+
         <Text style={styles.description} numberOfLines={2}>
           Queixa: {item.queixa_principal}
         </Text>

@@ -1,7 +1,9 @@
+import { Picker } from "@react-native-picker/picker";
 import { DrawerScreenProps } from "@react-navigation/drawer";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Button,
   ScrollView,
   StyleSheet,
@@ -17,6 +19,7 @@ type Props = DrawerScreenProps<DrawerParamList, "EditAnamnese">;
 const EditAnamneseScreen = ({ route, navigation }: Props) => {
   const { anamnese } = route.params;
 
+  // Estados iniciais preenchidos com os dados da anamnese
   const [queixaPrincipal, setQueixaPrincipal] = useState(
     anamnese.queixa_principal,
   );
@@ -27,8 +30,13 @@ const EditAnamneseScreen = ({ route, navigation }: Props) => {
   const [pacienteId, setPacienteId] = useState(anamnese.paciente.toString());
   const [medicoId, setMedicoId] = useState(anamnese.medico.toString());
 
+  // Novos estados para o Picker
+  const [listaPacientes, setListaPacientes] = useState<any[]>([]);
+  const [listaMedicos, setListaMedicos] = useState<any[]>([]);
+  const [loadingDados, setLoadingDados] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Garante que os dados se mantenham atualizados caso a rota mude
   useEffect(() => {
     setQueixaPrincipal(anamnese.queixa_principal);
     setAlergias(anamnese.alergias);
@@ -39,25 +47,67 @@ const EditAnamneseScreen = ({ route, navigation }: Props) => {
     setMedicoId(anamnese.medico.toString());
   }, [anamnese]);
 
+  // Busca as listas usando async/await com try...catch
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingDados(true);
+
+        // O Promise.all dispara as duas requisições ao mesmo tempo para ser mais rápido
+        const [resPacientes, resMedicos] = await Promise.all([
+          fetch("http://127.0.0.1:8000/paciente/api/"),
+          fetch("http://127.0.0.1:8000/medico/api/"),
+        ]);
+
+        const dataPacientes = await resPacientes.json();
+        const dataMedicos = await resMedicos.json();
+
+        setListaPacientes(dataPacientes.results || dataPacientes);
+        setListaMedicos(dataMedicos.results || dataMedicos);
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        Alert.alert(
+          "Erro",
+          "Não foi possível carregar os pacientes e médicos.",
+        );
+      } finally {
+        setLoadingDados(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handleSave = async () => {
+    if (!pacienteId || !medicoId) {
+      Alert.alert("Aviso", "Por favor, selecione um paciente e um médico.");
+      return;
+    }
+
     setSaving(true);
 
-    await fetch(`http://127.0.0.1:8000/anamnese/api/${anamnese.id}/`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        queixa_principal: queixaPrincipal,
-        alergias: alergias,
-        medicamentos: medicamentos,
-        alcool: alcool,
-        fumante: fumante,
-        paciente: parseInt(pacienteId),
-        medico: parseInt(medicoId),
-      }),
-    });
+    try {
+      await fetch(`http://127.0.0.1:8000/anamnese/api/${anamnese.id}/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queixa_principal: queixaPrincipal,
+          alergias: alergias,
+          medicamentos: medicamentos,
+          alcool: alcool,
+          fumante: fumante,
+          paciente: parseInt(pacienteId),
+          medico: parseInt(medicoId),
+        }),
+      });
 
-    navigation.navigate("Anamnese");
-    setSaving(false);
+      navigation.navigate("Anamnese");
+    } catch (error) {
+      console.error("Erro ao salvar edição:", error);
+      Alert.alert("Erro", "Não foi possível salvar as alterações.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderChoiceButton = (
@@ -84,6 +134,18 @@ const EditAnamneseScreen = ({ route, navigation }: Props) => {
     </TouchableOpacity>
   );
 
+  // Mostra o loading centralizado enquanto baixa os pacientes e médicos
+  if (loadingDados) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#4B7BE5" />
+        <Text style={{ textAlign: "center", marginTop: 10 }}>
+          Carregando dados...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -91,21 +153,39 @@ const EditAnamneseScreen = ({ route, navigation }: Props) => {
     >
       <Text style={styles.title}>Editar Anamnese</Text>
 
-      <Text style={styles.label}>ID do Paciente</Text>
-      <TextInput
-        value={pacienteId}
-        onChangeText={setPacienteId}
-        style={styles.input}
-        keyboardType="numeric"
-      />
+      <Text style={styles.label}>Paciente</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={pacienteId}
+          onValueChange={(itemValue) => setPacienteId(itemValue)}
+        >
+          <Picker.Item label="Selecione um paciente..." value="" />
+          {listaPacientes.map((paciente) => (
+            <Picker.Item
+              key={paciente.id}
+              label={paciente.nome}
+              value={paciente.id.toString()}
+            />
+          ))}
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>ID do Médico</Text>
-      <TextInput
-        value={medicoId}
-        onChangeText={setMedicoId}
-        style={styles.input}
-        keyboardType="numeric"
-      />
+      <Text style={styles.label}>Médico</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={medicoId}
+          onValueChange={(itemValue) => setMedicoId(itemValue)}
+        >
+          <Picker.Item label="Selecione um médico..." value="" />
+          {listaMedicos.map((medico) => (
+            <Picker.Item
+              key={medico.id}
+              label={medico.nome}
+              value={medico.id.toString()}
+            />
+          ))}
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Queixa Principal</Text>
       <TextInput
@@ -179,6 +259,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: "#f9f9f9",
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+    overflow: "hidden",
   },
   choiceContainer: {
     flexDirection: "row",
