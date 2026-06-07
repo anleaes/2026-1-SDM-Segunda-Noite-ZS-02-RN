@@ -23,6 +23,10 @@ const EditPacienteScreen = ({ route, navigation }: Props) => {
   const [peso, setPeso] = useState(String(paciente.peso));
   const [altura, setAltura] = useState(String(paciente.altura));
   const [endereco, setEndereco] = useState(paciente.endereco);
+  const [sobrenome, setSobrenome] = useState(paciente.sobrenome);
+  const [cpf, setCpf] = useState(paciente.cpf);
+  const [telefone, setTelefone] = useState(paciente.telefone);
+  const [email, setEmail] = useState(paciente.email);
 
   const [saving, setSaving] = useState(false);
 
@@ -32,32 +36,36 @@ const EditPacienteScreen = ({ route, navigation }: Props) => {
     setPeso(String(paciente.peso));
     setAltura(String(paciente.altura));
     setEndereco(paciente.endereco);
+    setSobrenome(paciente.sobrenome);
+    setCpf(paciente.cpf);
+    setTelefone(paciente.telefone);
+    setEmail(paciente.email);
   }, [paciente]);
 
   const handleSave = async () => {
-    try {
-      setSaving(true);
+    setSaving(true);
 
-      await fetch(`http://127.0.0.1:8000/paciente/${paciente.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome,
-          data_nascimento: dataNascimento,
-          peso: parseFloat(peso),
-          altura: parseFloat(altura),
-          endereco,
-        }),
-      });
+    // URL corrigida: adicionado o "/api/" no caminho
+    await fetch(`http://127.0.0.1:8000/paciente/api/${paciente.id}/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nome,
+        data_nascimento: dataNascimento,
+        peso: parseFloat(peso),
+        altura: parseFloat(altura),
+        endereco,
+        sobrenome,
+        cpf,
+        telefone,
+        email,
+      }),
+    });
 
-      navigation.navigate("Pacientes");
-    } catch (error) {
-      console.log("Erro ao salvar paciente:", error);
-    } finally {
-      setSaving(false);
-    }
+    navigation.navigate("Pacientes");
+    setSaving(false);
   };
 
   return (
@@ -95,6 +103,24 @@ const EditPacienteScreen = ({ route, navigation }: Props) => {
         onChangeText={setEndereco}
         style={styles.input}
       />
+      <Text style={styles.label}>Sobrenome</Text>
+      <TextInput
+        value={sobrenome}
+        onChangeText={setSobrenome}
+        style={styles.input}
+      />
+      <Text style={styles.label}>CPF</Text>
+      <TextInput value={cpf} onChangeText={setCpf} style={styles.input} />
+      <Text style={styles.label}>Telefone</Text>
+
+      <TextInput
+        value={telefone}
+        onChangeText={setTelefone}
+        style={styles.input}
+      />
+
+      <Text style={styles.label}>Email</Text>
+      <TextInput value={email} onChangeText={setEmail} style={styles.input} />
 
       {saving ? (
         <ActivityIndicator size="large" color="#4B7BE5" />
