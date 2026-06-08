@@ -1,5 +1,4 @@
-import { DrawerScreenProps } from '@react-navigation/drawer';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Button,
@@ -7,142 +6,107 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 
-import { DrawerParamList } from '../navigation/DrawerNavigator';
+// 🛠️ Tipagem ajustada para 'any' para evitar sublinhados vermelhos do TypeScript
+const EditAtestadoScreen = ({ route, navigation }: any) => {
+  const atestado = route.params?.atestado as any;
 
-type Props = DrawerScreenProps<
-  DrawerParamList,
-  'EditAtestado'
->;
+  const [codigoAutenticacao, setCodigoAutenticacao] = useState("");
+  const [dataInicioAfastamento, setDataInicioAfastamento] = useState("");
+  const [quantidadeDias, setQuantidadeDias] = useState("");
+  const [tipoAtestado, setTipoAtestado] = useState("MEDICO");
+  const [consulta, setConsulta] = useState<number>();
 
-const EditAtestadoScreen = ({
-  route,
-  navigation,
-}: Props) => {
-  const { atestado } = route.params;
+  // 🛠️ Array dinâmico para múltiplos CIDs
+  const [cidsSelecionados, setCidsSelecionados] = useState<
+    (number | undefined)[]
+  >([undefined]);
 
-  const [
-    codigoAutenticacao,
-    setCodigoAutenticacao,
-  ] = useState(
-    atestado.codigo_autenticacao
-  );
+  const [consultas, setConsultas] = useState<any[]>([]);
+  const [cids, setCids] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  const [
-    dataInicioAfastamento,
-    setDataInicioAfastamento,
-  ] = useState(
-    atestado.data_inicio_afastamento
-  );
-
-  const [
-    quantidadeDias,
-    setQuantidadeDias,
-  ] = useState(
-    atestado.quantidade_dias.toString()
-  );
-
-  const [
-    tipoAtestado,
-    setTipoAtestado,
-  ] = useState(
-    atestado.tipo_atestado
-  );
-
-  const [consulta, setConsulta] =
-    useState(atestado.consulta);
-
-  const [cid, setCid] =
-    useState(atestado.cid);
-
-  const [consultas, setConsultas] =
-    useState<any[]>([]);
-
-  const [cids, setCids] =
-    useState<any[]>([]);
-
-  const [saving, setSaving] =
-    useState(false);
-
+  // 1. Carrega os catálogos para preencher os Pickers
   useEffect(() => {
-    fetchConsultas();
-    fetchCids();
+    fetch("http://127.0.0.1:8000/consulta/api/")
+      .then((res) => res.json())
+      .then((data) => setConsultas(data))
+      .catch((err) => console.log(err));
+
+    fetch("http://127.0.0.1:8000/cid/api/")
+      .then((res) => res.json())
+      .then((data) => setCids(data))
+      .catch((err) => console.log(err));
   }, []);
 
-  const fetchConsultas = async () => {
-    try {
-      const response = await fetch(
-        'http://127.0.0.1:8000/consulta/api/'
+  // 2. Preenche os dados quando o atestado é recebido por parâmetro
+  useEffect(() => {
+    if (atestado) {
+      setCodigoAutenticacao(atestado.codigo_autenticacao || "");
+      setDataInicioAfastamento(atestado.data_inicio_afastamento || "");
+      setQuantidadeDias(
+        atestado.quantidade_dias ? String(atestado.quantidade_dias) : "",
+      );
+      setTipoAtestado(atestado.tipo_atestado || "MEDICO");
+
+      // Ajusta caso a consulta venha como objeto ou apenas o ID numérico
+      setConsulta(
+        atestado.consulta && typeof atestado.consulta === "object"
+          ? atestado.consulta.id
+          : atestado.consulta,
       );
 
-      const data =
-        await response.json();
-
-      setConsultas(data);
-    } catch (error) {
-      console.log(error);
+      // 🛠️ Carrega os CIDs múltiplos vinculados a este atestado
+      if (Array.isArray(atestado.cid) && atestado.cid.length > 0) {
+        // Mapeia garantindo que vamos pegar o ID mesmo se o backend enviar o objeto inteiro
+        const loadedCids = atestado.cid.map((c: any) =>
+          typeof c === "object" ? c.id : c,
+        );
+        setCidsSelecionados(loadedCids);
+      } else {
+        setCidsSelecionados([undefined]);
+      }
     }
+  }, [atestado]);
+
+  // 🛠️ Funções para gerenciar os Pickers dinâmicos
+  const handleAddCid = () => {
+    setCidsSelecionados([...cidsSelecionados, undefined]);
   };
 
-  const fetchCids = async () => {
-    try {
-      const response = await fetch(
-        'http://127.0.0.1:8000/cid/api/'
-      );
-
-      const data =
-        await response.json();
-
-      setCids(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const updateCidValue = (index: number, value: number | undefined) => {
+    const novosCids = [...cidsSelecionados];
+    novosCids[index] = value;
+    setCidsSelecionados(novosCids);
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
 
-      const response =
-        await fetch(
-          `http://127.0.0.1:8000/atestado/api/${atestado.id}/`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-            body: JSON.stringify({
-              codigo_autenticacao:
-                codigoAutenticacao,
-              data_inicio_afastamento:
-                dataInicioAfastamento,
-              quantidade_dias:
-                parseInt(
-                  quantidadeDias
-                ),
-              tipo_atestado:
-                tipoAtestado,
-              consulta,
-              cid,
-            }),
-          }
-        );
+      // Filtra para enviar apenas IDs válidos (ignora "Selecione um CID...")
+      const cidsFinais = cidsSelecionados.filter((id) => id !== undefined);
 
-      if (!response.ok) {
-        const erro =
-          await response.text();
+      await fetch(`http://127.0.0.1:8000/atestado/api/${atestado.id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          codigo_autenticacao: codigoAutenticacao,
+          data_inicio_afastamento: dataInicioAfastamento,
+          quantidade_dias: parseInt(quantidadeDias) || 0,
+          tipo_atestado: tipoAtestado,
+          consulta: consulta,
+          // 🎯 Enviando a chave no singular 'cid' conforme o Django espera
+          cid: cidsFinais,
+        }),
+      });
 
-        console.log(erro);
-        return;
-      }
-
-      navigation.navigate(
-        'Atestados'
-      );
+      navigation.navigate("Atestados");
     } catch (error) {
       console.log(error);
     } finally {
@@ -152,83 +116,48 @@ const EditAtestadoScreen = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Editar Atestado
-      </Text>
+      <Text style={styles.title}>Editar Atestado</Text>
 
-      <Text style={styles.label}>
-        Código de Autenticação
-      </Text>
-
+      <Text style={styles.label}>Código de Autenticação</Text>
       <TextInput
         value={codigoAutenticacao}
-        onChangeText={
-          setCodigoAutenticacao
-        }
+        onChangeText={setCodigoAutenticacao}
         style={styles.input}
       />
 
-      <Text style={styles.label}>
-        Data Início Afastamento
-      </Text>
-
+      <Text style={styles.label}>Data Início Afastamento</Text>
       <TextInput
         value={dataInicioAfastamento}
-        onChangeText={
-          setDataInicioAfastamento
-        }
-        style={styles.input}
+        onChangeText={setDataInicioAfastamento}
         placeholder="AAAA-MM-DD"
+        style={styles.input}
       />
 
-      <Text style={styles.label}>
-        Quantidade de Dias
-      </Text>
-
+      <Text style={styles.label}>Quantidade de Dias</Text>
       <TextInput
         value={quantidadeDias}
-        onChangeText={
-          setQuantidadeDias
-        }
+        onChangeText={setQuantidadeDias}
         keyboardType="numeric"
         style={styles.input}
       />
 
-      <Text style={styles.label}>
-        Tipo de Atestado
-      </Text>
-
+      <Text style={styles.label}>Tipo de Atestado</Text>
       <Picker
         selectedValue={tipoAtestado}
-        onValueChange={value =>
-          setTipoAtestado(value)
-        }
+        onValueChange={(value) => setTipoAtestado(value)}
       >
-        <Picker.Item
-          label="Médico"
-          value="MEDICO"
-        />
-        <Picker.Item
-          label="Odontológico"
-          value="ODONTO"
-        />
-        <Picker.Item
-          label="Outro"
-          value="OUTRO"
-        />
+        <Picker.Item label="Médico" value="MEDICO" />
+        <Picker.Item label="Odontológico" value="ODONTO" />
+        <Picker.Item label="Outro" value="OUTRO" />
       </Picker>
 
-      <Text style={styles.label}>
-        Consulta
-      </Text>
-
+      <Text style={styles.label}>Consulta</Text>
       <Picker
         selectedValue={consulta}
-        onValueChange={value =>
-          setConsulta(value)
-        }
+        onValueChange={(value) => setConsulta(value)}
       >
-        {consultas.map(item => (
+        <Picker.Item label="Selecione a consulta..." value={undefined} />
+        {consultas.map((item) => (
           <Picker.Item
             key={item.id}
             label={`Consulta ${item.id}`}
@@ -237,46 +166,50 @@ const EditAtestadoScreen = ({
         ))}
       </Picker>
 
-      <Text style={styles.label}>
-        CID
-      </Text>
+      <Text style={styles.label}>CIDs (Diagnósticos)</Text>
 
-      <Picker
-        selectedValue={cid}
-        onValueChange={value =>
-          setCid(value)
-        }
-      >
-        {cids.map(item => (
-          <Picker.Item
-            key={item.id}
-            label={`${item.codigo} - ${item.descricao}`}
-            value={item.id}
-          />
-        ))}
-      </Picker>
+      {/* 🛠️ Lista dinâmica carregando os CIDs do backend */}
+      {cidsSelecionados.map((cidSelecionado, index) => (
+        <View
+          key={index}
+          style={{
+            marginBottom: 10,
+            borderWidth: 1,
+            borderColor: "#ccc",
+            borderRadius: 8,
+          }}
+        >
+          <Picker
+            selectedValue={cidSelecionado}
+            onValueChange={(value) =>
+              updateCidValue(index, value ? Number(value) : undefined)
+            }
+          >
+            <Picker.Item label="Selecione um CID..." value={undefined} />
+            {cids.map((item) => (
+              <Picker.Item
+                key={item.id}
+                label={`${item.cod_cid} - ${item.descricao}`}
+                value={item.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      ))}
+
+      <View style={{ marginBottom: 20 }}>
+        <Button title="+ Adicionar CID" onPress={handleAddCid} color="#888" />
+      </View>
 
       {saving ? (
-        <ActivityIndicator
-          size="large"
-          color="#4B7BE5"
-        />
+        <ActivityIndicator size="large" color="#4B7BE5" />
       ) : (
-        <Button
-          title="Salvar Alterações"
-          onPress={handleSave}
-          color="#4B7BE5"
-        />
+        <View style={{ marginBottom: 10 }}>
+          <Button title="Salvar" onPress={handleSave} color="#4B7BE5" />
+        </View>
       )}
 
-      <Button
-        title="Voltar"
-        onPress={() =>
-          navigation.navigate(
-            'Atestados'
-          )
-        }
-      />
+      <Button title="Voltar" onPress={() => navigation.navigate("Atestados")} />
     </View>
   );
 };
@@ -285,22 +218,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   label: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 12,
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
   },
