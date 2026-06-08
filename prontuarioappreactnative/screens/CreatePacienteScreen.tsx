@@ -48,7 +48,7 @@ const CreatePacienteScreen = ({ navigation }: Props) => {
     setSaving(true);
 
     try {
-      // Ajustando o peso e altura para usar ponto ao invés de vírgula (caso o usuário digite "70,5")
+      // Ajustando o peso e altura para usar ponto ao invés de vírgula (caso o usuário digite "70,5") ajuste
       const pesoFormatado = peso.replace(",", ".");
       const alturaFormatada = altura.replace(",", ".");
 
