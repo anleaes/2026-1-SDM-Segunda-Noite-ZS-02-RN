@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 
-import { BASE_URL } from "../config";
 import { DrawerParamList } from "../navigation/DrawerNavigator";
 
 type Props = DrawerScreenProps<DrawerParamList, "EditConsulta">;
@@ -22,6 +21,7 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
   const consulta = route.params?.consulta as any;
 
   const [dataAgendada, setDataAgendada] = useState("");
+  // Inicializa vazio, mas será preenchido pelo useEffect com as siglas corretas
   const [status, setStatus] = useState("");
   const [motivo, setMotivo] = useState("");
   const [nivelPrioridade, setNivelPrioridade] = useState("");
@@ -36,7 +36,7 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
 
   // Carrega as listas apontando para os caminhos corretos no singular do teu backend
   useEffect(() => {
-    fetch(`${BASE_URL}/paciente/api/`)
+    fetch(`http://127.0.0.1:8000/paciente/api/`)
       .then((res) => {
         if (!res.ok) throw new Error("Erro HTTP: " + res.status);
         return res.json();
@@ -52,7 +52,7 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
       })
       .catch((err) => console.log("Erro ao buscar paciente:", err));
 
-    fetch(`${BASE_URL}/medico/api/`)
+    fetch(`http://127.0.0.1:8000/medico/api/`)
       .then((res) => {
         if (!res.ok) throw new Error("Erro HTTP: " + res.status);
         return res.json();
@@ -77,9 +77,10 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
         );
       }
 
-      setStatus(consulta.status || "");
+      // Garante que se vier nulo, ele adota as siglas padrão
+      setStatus(consulta.status || "AG");
       setMotivo(consulta.motivo || "");
-      setNivelPrioridade(consulta.nivel_prioridade || "");
+      setNivelPrioridade(consulta.nivel_prioridade || "N");
 
       const pId =
         typeof consulta.paciente === "object"
@@ -101,7 +102,7 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
       const dataFormatadaDjango = dataAgendada.trim().replace(" ", "T");
 
       const response = await fetch(
-        `${BASE_URL}/consultas/api/${consulta.id}/`,
+        `http://127.0.0.1:8000/consulta/api/${consulta.id}/`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -147,9 +148,10 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
           onValueChange={(itemValue) => setStatus(itemValue)}
           style={styles.pickerInternal}
         >
-          <Picker.Item label="Agendada" value="Agendada" />
-          <Picker.Item label="Realizada" value="Realizada" />
-          <Picker.Item label="Cancelada" value="Cancelada" />
+          {/* Values atualizados com as siglas do Django */}
+          <Picker.Item label="Agendada" value="AG" />
+          <Picker.Item label="Realizada" value="RE" />
+          <Picker.Item label="Cancelada" value="CA" />
         </Picker>
       </View>
 
@@ -160,10 +162,11 @@ const EditConsultaScreen = ({ route, navigation }: Props) => {
           onValueChange={(itemValue) => setNivelPrioridade(itemValue)}
           style={styles.pickerInternal}
         >
-          <Picker.Item label="Baixa" value="Baixa" />
-          <Picker.Item label="Normal" value="Normal" />
-          <Picker.Item label="Alta" value="Alta" />
-          <Picker.Item label="Urgência" value="Urgência" />
+          {/* Values atualizados com as siglas do Django */}
+          <Picker.Item label="Baixa" value="B" />
+          <Picker.Item label="Normal" value="N" />
+          <Picker.Item label="Alta" value="A" />
+          <Picker.Item label="Urgência" value="U" />
         </Picker>
       </View>
 

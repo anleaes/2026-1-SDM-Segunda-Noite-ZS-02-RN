@@ -3,6 +3,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BASE_URL } from "../config";
 import { DrawerParamList } from "../navigation/DrawerNavigator";
 
 type Props = DrawerScreenProps<DrawerParamList, "CreateMedicamento">;
@@ -37,7 +37,7 @@ const CreateMedicamentoScreen = ({ navigation }: Props) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await fetch(`${BASE_URL}/api/medicamentos/`, {
+      const response = await fetch(`http://127.0.0.1:8000/medicamento/api/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,9 +48,18 @@ const CreateMedicamentoScreen = ({ navigation }: Props) => {
           tem_generico: temGenerico,
         }),
       });
+
+      // Validação para exibir erros do Django na tela
+      if (!response.ok) {
+        const errJson = await response.json();
+        Alert.alert("Erro ao criar", JSON.stringify(errJson));
+        return;
+      }
+
       navigation.navigate("Medicamentos");
     } catch (error) {
       console.log(error);
+      Alert.alert("Erro", "Falha de conexão com o servidor.");
     } finally {
       setSaving(false);
     }
