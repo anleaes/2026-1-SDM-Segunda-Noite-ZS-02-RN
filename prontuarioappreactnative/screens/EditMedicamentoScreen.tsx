@@ -2,6 +2,7 @@ import { DrawerScreenProps } from "@react-navigation/drawer";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -10,7 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BASE_URL } from "../config";
 import { DrawerParamList } from "../navigation/DrawerNavigator";
 
 type Props = DrawerScreenProps<DrawerParamList, "EditMedicamento">;
@@ -40,20 +40,32 @@ const EditMedicamentoScreen = ({ route, navigation }: Props) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await fetch(`${BASE_URL}/api/medicamentos/${medicamento.id}/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          principio_ativo: principioAtivo,
-          e_controlado: eControlado,
-          categoria: categoria,
-          nome_referencia: nomeReferencia,
-          tem_generico: temGenerico,
-        }),
-      });
+      const response = await fetch(
+        `http://127.0.0.1:8000/medicamento/api/${medicamento.id}/`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            principio_ativo: principioAtivo,
+            e_controlado: eControlado,
+            categoria: categoria,
+            nome_referencia: nomeReferencia,
+            tem_generico: temGenerico,
+          }),
+        },
+      );
+
+      // Validação para exibir erros do Django na tela
+      if (!response.ok) {
+        const errJson = await response.json();
+        Alert.alert("Erro ao editar", JSON.stringify(errJson));
+        return;
+      }
+
       navigation.navigate("Medicamentos");
     } catch (error) {
       console.log(error);
+      Alert.alert("Erro", "Falha de conexão com o servidor.");
     } finally {
       setSaving(false);
     }

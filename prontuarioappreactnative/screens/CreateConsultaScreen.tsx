@@ -12,16 +12,16 @@ import {
   View,
 } from "react-native";
 
-import { BASE_URL } from "../config";
 import { DrawerParamList } from "../navigation/DrawerNavigator";
 
 type Props = DrawerScreenProps<DrawerParamList, "CreateConsulta">;
 
 const CreateConsultaScreen = ({ navigation }: Props) => {
   const [dataAgendada, setDataAgendada] = useState("");
-  const [status, setStatus] = useState("Agendada");
+  // Valores iniciais alterados para corresponderem às chaves do Django
+  const [status, setStatus] = useState("AG");
   const [motivo, setMotivo] = useState("");
-  const [nivelPrioridade, setNivelPrioridade] = useState("Normal");
+  const [nivelPrioridade, setNivelPrioridade] = useState("N");
 
   const [pacienteId, setPacienteId] = useState<number | undefined>(undefined);
   const [medicoId, setMedicoId] = useState<number | undefined>(undefined);
@@ -31,18 +31,17 @@ const CreateConsultaScreen = ({ navigation }: Props) => {
   const [listaPacientes, setListaPacientes] = useState<any[]>([]);
   const [listaMedicos, setListaMedicos] = useState<any[]>([]);
 
-  // Limpa os campos e carrega as listas sempre que o usuário entrar na tela
   useFocusEffect(
     useCallback(() => {
       setDataAgendada("");
-      setStatus("Agendada");
+      // Reseta para os valores corretos
+      setStatus("AG");
       setMotivo("");
-      setNivelPrioridade("Normal");
+      setNivelPrioridade("N");
       setPacienteId(undefined);
       setMedicoId(undefined);
 
-      // Busca Paciente no singular conforme seu endpoint
-      fetch(`${BASE_URL}/paciente/api/`)
+      fetch(`http://127.0.0.1:8000/paciente/api/`)
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data)) setListaPacientes(data);
@@ -50,8 +49,7 @@ const CreateConsultaScreen = ({ navigation }: Props) => {
         })
         .catch((err) => console.log("Erro paciente:", err));
 
-      // Busca Medico no singular conforme seu endpoint
-      fetch(`${BASE_URL}/medico/api/`)
+      fetch(`http://127.0.0.1:8000/medico/api/`)
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data)) setListaMedicos(data);
@@ -71,7 +69,7 @@ const CreateConsultaScreen = ({ navigation }: Props) => {
       setSaving(true);
       const dataFormatadaDjango = dataAgendada.trim().replace(" ", "T");
 
-      const response = await fetch(`${BASE_URL}/consultas/api/`, {
+      const response = await fetch(`http://127.0.0.1:8000/consulta/api/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -116,9 +114,10 @@ const CreateConsultaScreen = ({ navigation }: Props) => {
           onValueChange={(itemValue) => setStatus(itemValue)}
           style={styles.pickerInternal}
         >
-          <Picker.Item label="Agendada" value="Agendada" />
-          <Picker.Item label="Realizada" value="Realizada" />
-          <Picker.Item label="Cancelada" value="Cancelada" />
+          {/* Values atualizados com as siglas do Django */}
+          <Picker.Item label="Agendada" value="AG" />
+          <Picker.Item label="Realizada" value="RE" />
+          <Picker.Item label="Cancelada" value="CA" />
         </Picker>
       </View>
 
@@ -129,10 +128,11 @@ const CreateConsultaScreen = ({ navigation }: Props) => {
           onValueChange={(itemValue) => setNivelPrioridade(itemValue)}
           style={styles.pickerInternal}
         >
-          <Picker.Item label="Baixa" value="Baixa" />
-          <Picker.Item label="Normal" value="Normal" />
-          <Picker.Item label="Alta" value="Alta" />
-          <Picker.Item label="Urgência" value="Urgência" />
+          {/* Values atualizados com as siglas do Django */}
+          <Picker.Item label="Baixa" value="B" />
+          <Picker.Item label="Normal" value="N" />
+          <Picker.Item label="Alta" value="A" />
+          <Picker.Item label="Urgência" value="U" />
         </Picker>
       </View>
 
